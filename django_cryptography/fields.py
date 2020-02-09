@@ -1,5 +1,4 @@
 from base64 import b64decode, b64encode
-from importlib import import_module
 
 from django.core import checks
 from django.db import models
@@ -70,7 +69,7 @@ class PickledField(models.Field):
             return connection.Database.Binary(self._dump(value))
         return value
 
-    def from_db_value(self, value, expression, connection, context):
+    def from_db_value(self, value, *args, **kwargs):
         if value is not None:
             return self._load(force_bytes(value))
         return value
@@ -124,8 +123,7 @@ class EncryptedMixin(object):
 
     def check(self, **kwargs):
         errors = super(EncryptedMixin, self).check(**kwargs)
-        # Django 1.8 compatibility for `self.rel`
-        if getattr(self, 'remote_field', getattr(self, 'rel', None)):
+        if getattr(self, 'remote_field', None):
             errors.append(
                 checks.Error(
                     'Base field for encrypted cannot be a related field.',
@@ -175,7 +173,7 @@ class EncryptedMixin(object):
 
     get_db_prep_save = models.Field.get_db_prep_save
 
-    def from_db_value(self, value, expression, connection, context):
+    def from_db_value(self, value, *args, **kwargs):
         if value is not None:
             return self._load(force_bytes(value))
         return value
